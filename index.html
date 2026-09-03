@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>반지의 제왕 3: 왕의 귀환 - 모란논 검은 문 결전 (3D RPG Showcase)</title>
+  <link rel="stylesheet" href="css/rpg-style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- 3D WebGL Canvas Layer -->
+  <div id="canvas-container"></div>
+
+  <!-- Screen Space Floating Damage Numbers -->
+  <div id="floating-damage-container"></div>
+
+  <!-- AAA RPG Game HUD Overlay -->
+  <div class="ui-overlay">
+    
+    <!-- TOP HUD: Title, Objective, and Audio Tools -->
+    <header class="top-hud">
+      <div class="game-title-badge interactive-element">
+        <span class="title-crest">💍</span>
+        <div class="title-text">
+          <h1>THE RETURN OF THE KING</h1>
+          <p>모란논 검은 문 앞 최후의 전투 ("For Frodo!")</p>
+        </div>
+      </div>
+
+      <!-- Battle Objective & Ring of Power Progress -->
+      <div class="battle-objective-panel interactive-element">
+        <div class="obj-header">
+          <span class="obj-icon">🔥</span>
+          <span class="obj-title">퀘스트 목표: 사우론의 대군을 저지하고 프로도에게 시간을 벌어라!</span>
+        </div>
+        <div class="ring-bar-wrapper">
+          <span style="font-size: 11px; color: #a0978d;">운명의 산 절대반지 파괴:</span>
+          <div class="ring-bar-bg">
+            <div id="ring-progress-fill" class="ring-bar-fill"></div>
+          </div>
+          <span id="ring-progress-text" class="ring-percent">88.0%</span>
+        </div>
+      </div>
+
+      <!-- Quick Sound & BGM Controls -->
+      <div class="top-controls interactive-element">
+        <button id="btn-bgm-toggle" class="hud-btn" title="전투 배경음악 및 북소리">🔇 전장 군악 [OFF]</button>
+        <button id="btn-horn-call" class="hud-btn" title="로한/곤도르의 전쟁 나팔">📯 전쟁 나팔 분도</button>
+      </div>
+    </header>
+
+    <!-- MIDDLE HUD: Minimap Radar & Target Inspector Window -->
+    <section class="middle-hud">
+      
+      <!-- Top-Right Minimap Radar -->
+      <div class="minimap-panel interactive-element">
+        <canvas id="minimap-canvas"></canvas>
+        <div class="minimap-legend">
+          <span class="legend-item allies">● 연합군</span>
+          <span class="legend-item mordor">● 모르도르</span>
+        </div>
+      </div>
+
+      <!-- Target Unit Frame Inspector -->
+      <aside id="target-inspector" class="inspector-panel interactive-element">
+        <div id="inspector-empty" class="inspector-empty">
+          <p>전장의 영웅, 오크, 트롤, 검은 문, 사우론의 눈을 클릭하여 상세 상태를 확인하세요.</p>
+        </div>
+
+        <div id="inspector-content" style="display: none;">
+          <!-- Target Header -->
+          <div class="target-header">
+            <div class="target-avatar-frame">
+              <span id="target-icon" class="target-icon">👑</span>
+            </div>
+            <div class="target-meta">
+              <div id="target-name" class="target-name">아라곤 2세 엘레사르</div>
+              <div id="target-title" class="target-title">곤도르의 정당한 왕 & 이실두르의 후계자</div>
+              <div class="target-badges">
+                <span id="target-tier" class="target-tier">신화 영웅</span>
+                <span id="target-faction" class="faction-badge west">서부 연합군</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- HP / MP Gauges -->
+          <div class="gauge-group">
+            <div class="gauge-row">
+              <span class="gauge-label" style="color: #e74c3c;">HP</span>
+              <div class="gauge-bar-bg">
+                <div id="target-hp-fill" class="hp-fill" style="width: 100%;"></div>
+                <span id="target-hp-text" class="gauge-text">185,000 / 185,000</span>
+              </div>
+            </div>
+            <div class="gauge-row">
+              <span class="gauge-label" style="color: #3498db;">MP</span>
+              <div class="gauge-bar-bg">
+                <div id="target-mp-fill" class="mp-fill" style="width: 100%;"></div>
+                <span id="target-mp-text" class="gauge-text">55,000 / 55,000</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-k">공격력:</span>
+              <span id="stat-atk" class="stat-v">14,850</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-k">방어력:</span>
+              <span id="stat-def" class="stat-v">11,200</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-k">치명타율:</span>
+              <span id="stat-crit" class="stat-v">42.5%</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-k">전투력:</span>
+              <span id="stat-power" class="stat-v">98,400</span>
+            </div>
+          </div>
+
+          <!-- Buffs / Debuffs List -->
+          <div class="target-section-title">활성 효과 (Buffs & Effects)</div>
+          <div id="target-buffs" class="buffs-container"></div>
+
+          <!-- Unit Skills -->
+          <div class="target-section-title">고유 기술 (Signature Skills)</div>
+          <div id="target-skills" class="unit-skills-container"></div>
+
+          <!-- Lore / Background Story -->
+          <div class="target-section-title">원작 로어 및 배경</div>
+          <p id="target-lore" class="target-lore-text"></p>
+
+          <!-- Interactive Action Buttons -->
+          <div class="inspector-actions">
+            <button id="btn-focus-cam" class="action-btn">🎯 시점 추적</button>
+            <button id="btn-cast-unit-skill" class="action-btn">⚔️ 스킬 시전</button>
+            <button id="btn-voice-quote" class="action-btn">💬 명대사</button>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- BOTTOM HUD: Combat Log, Action Hotbar, Camera Toolbar -->
+    <footer class="bottom-hud">
+      
+      <!-- Left: RPG Combat Log -->
+      <div class="combat-log-panel interactive-element">
+        <div class="combat-log-header">
+          <span>⚔️ 전장 전투 기록 (Combat Log)</span>
+          <span style="font-size: 10px; color: #8a7e72;">실시간 갱신</span>
+        </div>
+        <div id="combat-log-body" class="combat-log-body"></div>
+      </div>
+
+      <!-- Center: Action Skill Hotbar (Slots 1-6) -->
+      <div class="hotbar-container interactive-element">
+        <div class="hotbar-title">서부 연합군 지휘관 전술 단축바 (1~6번 키)</div>
+        <div class="skill-slots">
+          
+          <div class="skill-slot" data-slot="1" title="[1] 안두릴의 일격 - 전방 신성 관통타">
+            <span class="slot-key">1</span>
+            <span class="slot-icon">⚔️</span>
+            <span class="slot-label">안두릴 일격</span>
+            <div class="cooldown-overlay"></div>
+          </div>
+
+          <div class="skill-slot" data-slot="2" title="[2] 이스타리의 섬광 - 광휘 폭발 및 실명">
+            <span class="slot-key">2</span>
+            <span class="slot-icon">⚡</span>
+            <span class="slot-label">이스타리 섬광</span>
+            <div class="cooldown-overlay"></div>
+          </div>
+
+          <div class="skill-slot" data-slot="3" title="[3] 로한의 돌격 나팔 - 전열 돌파 쇄도">
+            <span class="slot-key">3</span>
+            <span class="slot-icon">📯</span>
+            <span class="slot-label">로한 돌격</span>
+            <div class="cooldown-overlay"></div>
+          </div>
+
+          <div class="skill-slot" data-slot="4" title="[4] 과이히르 공습 - 거대 독수리 급강하 폭격">
+            <span class="slot-key">4</span>
+            <span class="slot-icon">🦅</span>
+            <span class="slot-label">독수리 공습</span>
+            <div class="cooldown-overlay"></div>
+          </div>
+
+          <div class="skill-slot" data-slot="5" title="[5] 시네마틱 불릿 타임 - 슬로우 모션 (0.25x)">
+            <span class="slot-key">5</span>
+            <span class="slot-icon">⏳</span>
+            <span class="slot-label">불릿 타임</span>
+            <div class="cooldown-overlay"></div>
+          </div>
+
+          <div class="skill-slot" data-slot="6" title="[6] 프로도를 위하여! - 전군 사기 극대화 및 총돌격">
+            <span class="slot-key">6</span>
+            <span class="slot-icon">👑</span>
+            <span class="slot-label">For Frodo!</span>
+            <div class="cooldown-overlay"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right: Camera Viewpoint Modes -->
+      <div class="camera-toolbar interactive-element">
+        <span style="font-size: 11px; color: var(--gold-dim); font-family: var(--font-title); text-align: right;">카메라 앵글 시점</span>
+        <div class="cam-btn-group">
+          <button class="cam-btn active" data-mode="free" title="마우스로 자유롭게 회전/확대">자유 뷰 (Free)</button>
+          <button class="cam-btn" data-mode="cinematic" title="전장을 영화처럼 다이내믹하게 선회">시네마틱 (Cinematic)</button>
+          <button class="cam-btn" data-mode="hero" title="아라곤의 등 뒤에서 검은 문을 응시">영웅 시점 (Hero)</button>
+          <button class="cam-btn" data-mode="rts" title="탑뷰 전장 지휘자 시점">RTS 지휘관 (Top)</button>
+        </div>
+      </div>
+
+    </footer>
+
+  </div>
+
+  <!-- Entry Script -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
