@@ -227,6 +227,13 @@ html, body {
   box-shadow: 0 0 10px rgba(200, 161, 101, 0.4);
 }
 
+.hud-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
 .hud-btn.active {
   background: linear-gradient(180deg, #7a623e 0%, #4a3a22 100%);
   border-color: var(--gold-bright);
