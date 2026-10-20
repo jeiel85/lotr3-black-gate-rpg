@@ -1,0 +1,31 @@
+{
+  "name": "반지의 제왕 3: 모란논 검은 문 결전",
+  "short_name": "검은 문 결전",
+  "description": "모란논 검은 문 앞 최후의 전투를 지휘하는 3D 웹 RPG 쇼케이스",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0c080a",
+  "theme_color": "#0c080a",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
